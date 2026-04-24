@@ -182,6 +182,22 @@ export function Upload({ onInitialize }: UploadProps) {
             )}
           </div>
 
+          {/* RGB preview */}
+          {status === 'success' && uploadResult?.rgb_preview && (
+            <img
+              src={`data:image/jpeg;base64,${uploadResult.rgb_preview}`}
+              style={{
+                width: '100%',
+                maxHeight: 200,
+                objectFit: 'cover',
+                borderRadius: 4,
+                border: '1px solid var(--border-act)',
+                boxShadow: '0 0 24px rgba(0,229,255,0.15)',
+              }}
+              alt="RGB Preview"
+            />
+          )}
+
           {/* Initialize button */}
           {status === 'success' && (
             <button

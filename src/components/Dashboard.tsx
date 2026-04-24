@@ -117,6 +117,7 @@ export function Dashboard({ onNewAnalysis }: DashboardProps) {
 
         <SplitViewer
           rgb={detectionResult.rgb_image}
+          rgbFallback={uploadResult.rgb_preview}
           heatmap={detectionResult.heatmap_raw}
           overlay={detectionResult.heatmap_overlay}
           mask={detectionResult.anomaly_mask}

@@ -256,14 +256,17 @@ export function PipelineProgress({ onComplete }: PipelineProps) {
             style={{
               flex: 1,
               position: 'relative',
-              background:
-                uploadResult?.rgb_preview
-                  ? `url(data:image/jpeg;base64,${uploadResult.rgb_preview}) center/cover`
-                  : 'linear-gradient(135deg, var(--surface2) 0%, var(--surface3) 100%)',
+              background: 'linear-gradient(135deg, var(--surface2) 0%, var(--surface3) 100%)',
               overflow: 'hidden',
             }}
           >
-            {!uploadResult?.rgb_preview && (
+            {uploadResult?.rgb_preview ? (
+              <img
+                src={`data:image/jpeg;base64,${uploadResult.rgb_preview}`}
+                alt="spectral preview"
+                style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+              />
+            ) : (
               <>
                 <div
                   style={{
