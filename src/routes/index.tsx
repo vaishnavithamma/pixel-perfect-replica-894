@@ -1,26 +1,47 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { useState } from "react";
+import { Upload } from "../components/Upload";
+import { PipelineProgress } from "../components/PipelineProgress";
+import { Dashboard } from "../components/Dashboard";
+import { useDetectionStore } from "../store/detectionStore";
+
+type Screen = "upload" | "pipeline" | "dashboard";
 
 export const Route = createFileRoute("/")({
+  head: () => ({
+    meta: [
+      { title: "SPECTRASHIELD — Hyperspectral Anomaly Detection" },
+      {
+        name: "description",
+        content:
+          "Dual-engine hyperspectral anomaly detection. U-Net + RX score fusion for unsupervised target discovery in spectral imaging cubes.",
+      },
+      { property: "og:title", content: "SPECTRASHIELD — Hyperspectral Anomaly Detection" },
+      {
+        property: "og:description",
+        content: "Dual-engine hyperspectral anomaly detection. NASA-grade scientific interface.",
+      },
+    ],
+  }),
   component: Index,
 });
 
-// IMPORTANT: Replace this placeholder. For sites with multiple pages (About, Services, Contact, etc.),
-// create separate route files (about.tsx, services.tsx, contact.tsx) — don't put all pages in this file.
-function PlaceholderIndex() {
-  return (
-    <div
-      className="flex min-h-screen items-center justify-center"
-      style={{ backgroundColor: "#fcfbf8" }}
-    >
-      <img
-        data-lovable-blank-page-placeholder="REMOVE_THIS"
-        src="https://cdn.gpteng.co/blank-app-v1.svg"
-        alt="Your app will live here!"
-      />
-    </div>
-  );
-}
-
 function Index() {
-  return <PlaceholderIndex />;
+  const [screen, setScreen] = useState<Screen>("upload");
+  const reset = useDetectionStore((s) => s.reset);
+
+  return (
+    <>
+      {screen === "upload" && <Upload onInitialize={() => setScreen("pipeline")} />}
+      {screen === "pipeline" && <PipelineProgress onComplete={() => setScreen("dashboard")} />}
+      {screen === "dashboard" && (
+        <Dashboard
+          onNewAnalysis={() => {
+            reset();
+            setScreen("upload");
+          }}
+        />
+      )}
+    </>
+  );
 }
