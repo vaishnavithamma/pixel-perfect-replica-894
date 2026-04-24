@@ -152,7 +152,7 @@ export function Upload({ onInitialize }: UploadProps) {
               ref={fileRef}
               type="file"
               hidden
-              accept=".mat,.hdr,.img,.npy"
+              accept=".mat,.hdr,.img,.npy,image/*"
               onChange={(e) => e.target.files?.[0] && handleFile(e.target.files[0])}
             />
 
