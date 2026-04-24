@@ -18,22 +18,45 @@ export function Upload({ onInitialize }: UploadProps) {
   const fileRef = useRef<HTMLInputElement>(null);
   const { uploadResult, setUploadResult } = useDetectionStore();
 
+  const readAsDataUrl = (file: File) =>
+    new Promise<string>((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(String(reader.result ?? ''));
+      reader.onerror = () => reject(reader.error);
+      reader.readAsDataURL(file);
+    });
+
   const handleFile = async (file: File) => {
     setFilename(file.name);
     setStatus('validating');
     setErrorMsg('');
+
+    // Read the user's file locally so we can always show a real preview,
+    // even when the backend is unavailable and we fall back to mock data.
+    let localPreview = '';
+    if (file.type.startsWith('image/')) {
+      try {
+        const dataUrl = await readAsDataUrl(file);
+        // strip the "data:image/...;base64," prefix to match backend format
+        localPreview = dataUrl.includes(',') ? dataUrl.split(',')[1] : dataUrl;
+      } catch {
+        localPreview = '';
+      }
+    }
+
     try {
       const fd = new FormData();
       fd.append('file', file);
       const res = await fetch('http://localhost:8000/upload', { method: 'POST', body: fd });
       if (!res.ok) throw new Error('upload failed');
       const data: UploadResponse = await res.json();
-      setUploadResult(data);
+      // prefer backend preview, else use the locally-read one
+      setUploadResult({ ...data, rgb_preview: data.rgb_preview || localPreview });
       setStatus('success');
     } catch {
-      // graceful fallback
-      await new Promise((r) => setTimeout(r, 900));
-      setUploadResult(mockUpload);
+      // graceful fallback — use the locally-read preview if we have one
+      await new Promise((r) => setTimeout(r, 600));
+      setUploadResult({ ...mockUpload, rgb_preview: localPreview });
       setStatus('success');
     }
   };
@@ -129,7 +152,7 @@ export function Upload({ onInitialize }: UploadProps) {
               ref={fileRef}
               type="file"
               hidden
-              accept=".mat,.hdr,.img,.npy"
+              accept=".mat,.hdr,.img,.npy,image/*"
               onChange={(e) => e.target.files?.[0] && handleFile(e.target.files[0])}
             />
 
