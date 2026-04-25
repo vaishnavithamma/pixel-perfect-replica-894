@@ -3,7 +3,7 @@ import { Atmosphere, CornerBrackets, HexagonLogo } from './Atmosphere';
 import { useDetectionStore } from '../store/detectionStore';
 import { mockDetect } from '../lib/mockData';
 import type { DetectResponse } from '../types/api.types';
-
+import { API_BASE } from '../lib/api';
 const STAGES = [
   { name: 'PREPROCESSING', sub: 'Normalizing spectral bands · band-pass filter applied' },
   { name: 'PCA REDUCTION', sub: '186 → 30 components · 99.2% variance retained' },
@@ -61,7 +61,7 @@ export function PipelineProgress({ onComplete }: PipelineProps) {
     setAnalyzing(true);
     setError('');
     try {
-      const res = await fetch('http://localhost:8000/detect', {
+      const res = await fetch(`${API_BASE}/detect`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ file_hash: uploadResult?.file_hash }),
@@ -70,10 +70,8 @@ export function PipelineProgress({ onComplete }: PipelineProps) {
       const data: DetectResponse = await res.json();
       setDetectionResult(data);
       onComplete();
-    } catch {
-      await new Promise((r) => setTimeout(r, 800));
-      setDetectionResult(mockDetect);
-      onComplete();
+    } catch (err) {
+      setError('Backend offline or detection failed. Check terminal.');
     }
   };
 

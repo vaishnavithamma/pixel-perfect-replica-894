@@ -18,6 +18,53 @@ export function Dashboard({ onNewAnalysis }: DashboardProps) {
 
   if (!detectionResult || !uploadResult) return null;
 
+  const safeUpload = {
+    ...uploadResult,
+    format: uploadResult.format ?? 'RGB',
+    file_hash: uploadResult.file_hash ?? 'unknown',
+    rgb_preview: uploadResult.rgb_preview ?? '',
+    bands: uploadResult.bands ?? [],
+    shape: {
+      height: uploadResult.shape?.height ?? 0,
+      width: uploadResult.shape?.width ?? 0,
+      bands: uploadResult.shape?.bands ?? 0,
+    },
+  };
+
+  const safeDetection = {
+    ...detectionResult,
+    status: detectionResult.status ?? 'ok',
+    rgb_image: detectionResult.rgb_image ?? '',
+    heatmap_raw: detectionResult.heatmap_raw ?? '',
+    heatmap_overlay: detectionResult.heatmap_overlay ?? '',
+    anomaly_mask: detectionResult.anomaly_mask ?? '',
+    anomaly_regions: detectionResult.anomaly_regions ?? [],
+    processing_time_ms: detectionResult.processing_time_ms ?? 0,
+    pipeline_metadata: {
+      bands_removed: detectionResult.pipeline_metadata?.bands_removed ?? [],
+      pca_variance_retained: detectionResult.pipeline_metadata?.pca_variance_retained ?? 0,
+      unet_final_loss: detectionResult.pipeline_metadata?.unet_final_loss ?? 0,
+      total_anomalous_pixels: detectionResult.pipeline_metadata?.total_anomalous_pixels ?? 0,
+    },
+  };
+
+  const handleExport = () => {
+    const report = {
+      timestamp: new Date().toISOString(),
+      upload: safeUpload,
+      detection: safeDetection,
+    };
+    const blob = new Blob([JSON.stringify(report, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `spectrashield_${safeUpload.file_hash}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+
   return (
     <div className="fade-in" style={{ position: 'relative', width: '100vw', height: '100vh', overflow: 'hidden' }}>
       <Atmosphere />
@@ -58,7 +105,7 @@ export function Dashboard({ onNewAnalysis }: DashboardProps) {
 
         <div style={{ flex: 1, textAlign: 'center' }} className="font-mono">
           <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)', letterSpacing: '0.06em' }}>
-            {uploadResult.file_hash}.{uploadResult.format.toLowerCase()} · {uploadResult.shape.height}×{uploadResult.shape.width}×{uploadResult.shape.bands}
+            {safeUpload.file_hash}.{safeUpload.format.toLowerCase()} · {safeUpload.shape.height}×{safeUpload.shape.width}×{safeUpload.shape.bands}
           </span>
         </div>
 
@@ -90,6 +137,7 @@ export function Dashboard({ onNewAnalysis }: DashboardProps) {
             NEW ANALYSIS
           </button>
           <button
+            onClick={handleExport}
             className="font-mono"
             style={{
               height: 32,
@@ -116,23 +164,25 @@ export function Dashboard({ onNewAnalysis }: DashboardProps) {
         </div>
 
         <SplitViewer
-          rgb={detectionResult.rgb_image}
-          rgbFallback={uploadResult.rgb_preview}
-          heatmap={detectionResult.heatmap_raw}
-          overlay={detectionResult.heatmap_overlay}
-          mask={detectionResult.anomaly_mask}
-          regions={detectionResult.anomaly_regions}
-          imgWidth={uploadResult.shape.width}
-          imgHeight={uploadResult.shape.height}
+          rgb={safeDetection.rgb_image}
+          rgbFallback={safeUpload.rgb_preview}
+          heatmap={safeDetection.heatmap_raw}
+          overlay={safeDetection.heatmap_overlay}
+          mask={safeDetection.anomaly_mask}
+          regions={safeDetection.anomaly_regions}
+          imgWidth={safeUpload.shape.width}
+          imgHeight={safeUpload.shape.height}
           onSelectRegion={setSelectedRegion}
         />
 
         <div style={{ width: 300, background: 'var(--surface1)', borderLeft: '1px solid var(--border)', overflow: 'hidden' }}>
-          <MetricsPanel result={detectionResult} onSelectRegion={setSelectedRegion} />
+          <MetricsPanel result={safeDetection} onSelectRegion={setSelectedRegion} />
         </div>
       </div>
 
-      {selectedRegion && <AnomalyDetail region={selectedRegion} onClose={() => setSelectedRegion(null)} />}
+      {selectedRegion && (
+        <AnomalyDetail region={selectedRegion} onClose={() => setSelectedRegion(null)} />
+      )}
     </div>
   );
 }

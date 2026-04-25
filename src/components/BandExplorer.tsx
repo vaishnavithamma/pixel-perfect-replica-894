@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
 import { useDetectionStore } from '../store/detectionStore';
+import type { BandThumbnail } from '../types/api.types';
 
 interface BandExplorerProps {
   band: number;
@@ -73,54 +74,28 @@ export function BandExplorer({ band, setBand }: BandExplorerProps) {
         {thumbs.map((b) => {
           const isActive = b === band;
           const isNoisy = noisy.includes(b);
+          const realThumb = uploadResult?.bands?.find(bt => bt.band_id === String(b).padStart(3, '0'));
           return (
-            <button
-              key={b}
-              onClick={() => setBand(b)}
-              style={{
-                position: 'relative',
-                aspectRatio: '1',
-                background: `linear-gradient(${135 + b}deg, var(--surface2) 0%, var(--surface3) 100%)`,
-                borderRadius: 4,
-                border: isActive ? '1px solid var(--cyan)' : '1px solid var(--border)',
-                boxShadow: isActive ? '0 0 8px rgba(0,229,255,0.3)' : 'none',
-                padding: 0,
-                overflow: 'hidden',
-                transition: 'all 200ms',
-              }}
-            >
-              <span
-                className="font-mono"
-                style={{
-                  position: 'absolute',
-                  top: 4,
-                  left: 5,
-                  fontSize: 9,
-                  color: isActive ? 'var(--cyan)' : 'rgba(255,255,255,0.5)',
-                }}
-              >
-                {b}
-              </span>
-              {isNoisy && (
-                <span
-                  style={{
-                    position: 'absolute',
-                    top: 4,
-                    right: 5,
-                    width: 4,
-                    height: 4,
-                    borderRadius: '50%',
-                    background: 'var(--red)',
-                  }}
-                />
+            <button key={b} onClick={() => setBand(b)} style={{
+              position: 'relative', aspectRatio: '1',
+              background: realThumb ? 'transparent' : `linear-gradient(${135 + b}deg, var(--surface2) 0%, var(--surface3) 100%)`,
+              borderRadius: 4,
+              border: isActive ? '1px solid var(--cyan)' : '1px solid var(--border)',
+              boxShadow: isActive ? '0 0 8px rgba(0,229,255,0.3)' : 'none',
+              padding: 0, overflow: 'hidden', transition: 'all 200ms',
+            }}>
+              {realThumb ? (
+                <img src={`data:image/jpeg;base64,${realThumb.thumbnail_b64}`}
+                  alt={`Band ${b}`} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+              ) : (
+                <div style={{ position: 'absolute', inset: 0, background: `radial-gradient(...)` }} />
               )}
-              <div
-                style={{
-                  position: 'absolute',
-                  inset: 0,
-                  background: `radial-gradient(circle at ${30 + (b % 50)}% ${40 + (b % 30)}%, rgba(0,229,255,${0.05 + (b % 7) * 0.02}) 0%, transparent 70%)`,
-                }}
-              />
+              <span className="font-mono" style={{
+                position: 'absolute', top: 4, left: 5, fontSize: 9,
+                color: isActive ? 'var(--cyan)' : 'rgba(255,255,255,0.5)',
+                textShadow: '0 0 4px rgba(0,0,0,0.8)'
+              }}>{b}</span>
+              {isNoisy && <span style={{ position: 'absolute', top: 4, right: 5, width: 4, height: 4, borderRadius: '50%', background: 'var(--red)' }} />}
             </button>
           );
         })}

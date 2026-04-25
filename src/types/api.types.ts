@@ -1,3 +1,9 @@
+export interface BandThumbnail {
+  band_id: string;
+  wavelength: string;
+  thumbnail_b64: string;
+}
+
 export interface UploadResponse {
   status: string;
   file_hash: string;
@@ -6,6 +12,7 @@ export interface UploadResponse {
   rgb_preview: string;
   estimated_processing_seconds: number;
   noisy_bands_detected: number[];
+  bands?: BandThumbnail[];
 }
 
 export interface AnomalyRegion {

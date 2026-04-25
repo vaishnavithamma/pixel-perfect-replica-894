@@ -3,7 +3,7 @@ import { Atmosphere, CornerBrackets, HexagonLogo } from './Atmosphere';
 import { useDetectionStore } from '../store/detectionStore';
 import { mockUpload } from '../lib/mockData';
 import type { UploadResponse } from '../types/api.types';
-
+import { API_BASE } from '../lib/api';
 type Status = 'idle' | 'validating' | 'success' | 'error';
 
 interface UploadProps {
@@ -47,18 +47,17 @@ export function Upload({ onInitialize }: UploadProps) {
     try {
       const fd = new FormData();
       fd.append('file', file);
-      const res = await fetch('http://localhost:8000/upload', { method: 'POST', body: fd });
+      const res = await fetch(`${API_BASE}/upload`, { method: 'POST', body: fd });
       if (!res.ok) throw new Error('upload failed');
       const data: UploadResponse = await res.json();
       // prefer backend preview, else use the locally-read one
       setUploadResult({ ...data, rgb_preview: data.rgb_preview || localPreview });
       setStatus('success');
-    } catch {
-      // graceful fallback — use the locally-read preview if we have one
-      await new Promise((r) => setTimeout(r, 600));
-      setUploadResult({ ...mockUpload, rgb_preview: localPreview });
-      setStatus('success');
+    } catch (err) {
+      setErrorMsg('Backend offline — run: cd localaether/backend && uvicorn main:app --reload');
+      setStatus('error');
     }
+      
   };
 
   const onDrop = (e: React.DragEvent) => {
