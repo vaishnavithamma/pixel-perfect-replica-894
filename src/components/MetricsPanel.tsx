@@ -7,7 +7,7 @@ interface MetricsPanelProps {
 }
 
 export function MetricsPanel({ result, onSelectRegion }: MetricsPanelProps) {
-  const maxConf = Math.max(...result.anomaly_regions.map((r) => r.confidence)) * 100;
+  const maxConf =100
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden' }}>
